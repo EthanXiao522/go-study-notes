@@ -5,15 +5,20 @@ import (
 	"go-grpc/go-grpc-client/proto/hello"
 	"io"
 	"log"
+	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:10001", //连接服务端ip:port
+	/* 	conn, err := grpc.Dial("localhost:10001", //连接服务端ip:port
+		grpc.WithTransportCredentials(insecure.NewCredentials()), // 不安全的连接（仅开发用）
+	) */
+	conn, err := grpc.NewClient("localhost:10001", //连接服务端ip:port
 		grpc.WithTransportCredentials(insecure.NewCredentials()), // 不安全的连接（仅开发用）
 	)
 
@@ -22,7 +27,6 @@ func main() {
 	}
 
 	defer conn.Close()
-
 	client := hello.NewHelloClient(conn)
 
 	// context timeout
@@ -48,6 +52,27 @@ func main() {
 	}
 
 	log.Println("SayHello:", resp)
+
+	log.Println("##############分割线####################")
+
+	//01.启动Gin+gRPC模式(Gin对外提供api，gRPC内部服务调用)
+	//127.0.0.1:8080/sayhello?Request=ni hao&id=223&Email=email
+	r := gin.Default()
+	//02.在路由处理函数中使用 gRPC 客户端
+	r.GET("/sayhello", func(ctx *gin.Context) {
+		id, _ := strconv.ParseInt(ctx.Query("Request"), 10, 32)
+		resp, err := client.SayHello(ctx, &hello.HelloReq{
+			Request: ctx.Query("Request"),
+			Id:      int32(id),
+			Email:   ctx.Query("Email"),
+		})
+		if err != nil {
+			// 错误处理：将 gRPC 错误码转换为 HTTP 状态码[citation:3]
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(200, resp)
+	})
 
 	log.Println("##############分割线####################")
 
@@ -84,6 +109,8 @@ func main() {
 
 	// 客户端流式 RPC 调用
 	clientStreamCall(client)
+
+	r.Run(":8080")
 }
 
 // 客户端流式 RPC 调用
