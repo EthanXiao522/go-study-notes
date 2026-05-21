@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug go-grpc-client",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/go-grpc/go-grpc-client/main.go",
+            "cwd": "${workspaceFolder}/go-grpc",
+            "env": {}
+        },
+        {
+            "name": "Debug go-grpc-server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/go-grpc/go-grpc-server/main.go",
+            "cwd": "${workspaceFolder}/go-grpc",
+            "env": {}
+        }
+    ]
+}
